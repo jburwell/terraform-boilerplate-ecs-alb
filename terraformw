@@ -1,0 +1,99 @@
+#!/usr/bin/python
+
+import argparse
+import os
+import subprocess
+import sys
+
+from string import Template
+
+DEFAULT_PARAMETER_FILE_NAME = "cluster_parameters.conf"
+
+
+def sanitize(input):
+    return input.strip().replace('"', "")
+
+
+def parse_lines(lines, separator="="):
+    for line in lines:
+        if not line:
+            continue
+        key, value = line.split(separator)
+        yield sanitize(key), sanitize(value)
+
+
+def lines_to_dict(lines):
+    return { key : value for (key, value) in parse_lines(lines) }
+
+
+def load_key_value_file(file_name):
+    with open(file_name, "r") as file:
+        return lines_to_dict(file)
+
+
+def create_state_directory():
+    state_dir = ".deploy-state"
+    if not os.path.exists(state_dir):
+        os.makedirs(state_dir)
+    return state_dir
+
+
+def read_template_file(template_file_name="environment-template.tfvars"):
+    with open(template_file_name, "r") as template_file:
+        return Template(template_file.read())
+
+
+def render_template_to_dict(parameters, template):
+    return lines_to_dict(template.substitute(parameters).split('\n'))
+
+
+def render_dict_to_hcl(dict):
+    for key, value in dict.iteritems():
+        yield "{0} = \"{1}\"".format(key, value)
+
+
+def render_environment_file(state_dir, parameters, environment_file_name="environment.tfvars"):
+    template = read_template_file()
+
+    rendered_configuration = dict(parameters)
+    rendered_configuration.update(render_template_to_dict(parameters, template))
+
+    environment_file_name = os.path.join(state_dir, "environment.tfvars")
+    with open(environment_file_name, "w") as environment_file:
+        environment_file.write(
+            '\n'.join(render_dict_to_hcl(rendered_configuration)))
+        environment_file.write('\n')
+    return environment_file_name
+
+def main(action):
+
+    cmd_line = ["terraform"]
+
+    if action:
+        cmd_line.append(action)
+
+    if action not in ["show", "version"]:
+
+        # Load input parameters ...
+        parameters=load_key_value_file(DEFAULT_PARAMETER_FILE_NAME)
+
+        # Create temporary file ...
+        state_dir=create_state_directory()
+
+        # Render Terraform environment file ...
+        environment_file=render_environment_file(state_dir, parameters)
+
+        # Execute a Terraform plan using the variable file ...
+        cmd_line = cmd_line + ["-var-file=" + environment_file]
+
+    return subprocess.call(cmd_line)
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action",
+                        choices = ["apply", "destroy", "plan", "refresh", "show", "version"],
+                        default=None)
+    arguments = parser.parse_args()
+
+    sys.exit(main(arguments.action))

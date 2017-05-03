@@ -89,7 +89,7 @@ resource "aws_iam_group_membership" "administrators" {
  * Group policy of administrators
  */
 resource "aws_iam_group_policy" "administrators_policy" {
-    name = "example_admin_policy"
+    name = "${var.project}_admin_policy"
     group = "${aws_iam_group.administrators.id}"
     policy = <<EOF
 {
@@ -112,7 +112,7 @@ EOF
  */
 resource "aws_iam_instance_profile" "instance_role" {
     name = "${var.project}_instance_role_profile"
-    roles = ["${aws_iam_role.instance_role.name}"]
+    role = "${aws_iam_role.instance_role.name}"
 }
 
 /**
@@ -120,7 +120,6 @@ resource "aws_iam_instance_profile" "instance_role" {
  */
 resource "aws_iam_role" "instance_role" {
     name = "${var.project}_instance_role"
-    path = "/"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -136,6 +135,7 @@ resource "aws_iam_role" "instance_role" {
   ]
 }
 EOF
+
 }
 
 /**
@@ -158,14 +158,26 @@ resource "aws_iam_role_policy" "instance_role_policy" {
       "Sid": "",
       "Effect": "Allow",
       "Action": [
+        "ecs:CreateCluster",
+        "ecs:DeregisterContainerInstance",
+        "ecs:DiscoverPollEndpoint",
+        "ecs:Poll",
+        "ecs:RegisterContainerInstance",
+        "ecs:StartTelemetrySession",
+        "ecs:Submit*",
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
         "elasticloadbalancing:Describe*",
         "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
         "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
         "elasticloadbalancing:RegisterTargets",
         "elasticloadbalancing:DeregisterTargets",
         "ec2:Describe*",
-        "ec2:AuthorizeSecurityGroupIngress",
-        "elasticache:Describe*"
+        "ec2:AuthorizeSecurityGroupIngress"
       ],
       "Resource": "*"
     },

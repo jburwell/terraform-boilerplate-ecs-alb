@@ -1,34 +1,90 @@
 # A project name
 variable "project" {
-  default = "example"
+  type = "string"
+}
+
+# AWS Access Key
+variable "access_key" {
+  type = "string"
+}
+
+# AWS Secret Key
+variable "secret_key" {
+  type = "string"
 }
 
 # AWS Region
 variable "region" {
-  default = "ap-northeast-1" # replace with your region
+  type = "string"
 }
 
-# aws provider setting
-provider "aws" {
-  region = "${var.region}"
+# DNS root zone
+variable "root_zone" { 
+  type = "string"
 }
 
 # S3 bucket for tfstate
 variable "tf_state_bucket" {
-  default = "example.terraform"
+  type = "string"
 }
 
-# Key name for state file of development environment
-variable "tf_state_key_development" {
-  default = "example.development.terraform.tfstate"
+variable "zone_bucket" {
+  type = "string"
 }
 
-# Key name for state file of production environment
-variable "tf_state_key_production" {
-  default = "example.production.terraform.tfstate"
+variable "cluster_min_size" {
+  default = 1
 }
 
-# Route53 root zone
-variable "route53_zone" {
-  default = "example.com"
+variable "cluster_max_size" {
+  default = 1
 }
+
+variable "desired_capacity" {
+  default = 1
+}
+
+# Docker repository name for app container on ECS
+variable "docker_repository" {
+  default = "namespace/image_name"
+}
+
+variable "project_zone" {
+  type = "string"
+}
+
+variable "name_prefix" {
+  type = "string"
+}
+
+variable "cluster_name" {
+  type = "string"
+}
+
+variable "root_path" {
+  default = ""
+}
+
+variable "config_path" {
+  default = "config"
+}
+
+variable "log_path" {
+  default = "logs"
+}
+
+variable "key_pair" {
+  type = "string"
+}
+
+variable "ecs_config_key" {
+  default = "config/ecs.config"
+}
+
+# aws provider setting
+provider "aws" {
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
+  region = "${var.region}"
+}
+

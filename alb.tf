@@ -2,21 +2,20 @@
  * Application LoadBalancer
  */
 resource "aws_alb" "front" {
-  name            = "${var.project}-${var.environment}-front-alb"
+  name            = "${var.name_prefix}-front-alb"
   internal        = false
   security_groups = ["${aws_security_group.alb.id}"]
   subnets         = ["${aws_subnet.primary.id}", "${aws_subnet.secondary.id}"]
 
-  enable_deletion_protection = true
-
   access_logs {
-    bucket = "${aws_s3_bucket.logs.bucket}"
-    prefix = "${var.project}"
+    bucket = "${var.zone_bucket}"
+    prefix = "${var.log_path}"
   }
 
   tags {
     Group = "${var.project}"
-    Environment = "${var.environment}"
+# TODO Add back when environment support is added
+#    Environment = "${var.environment}"
   }
 }
 
@@ -24,10 +23,10 @@ resource "aws_alb" "front" {
  * Target group for ALB
  */
 resource "aws_alb_target_group" "web" {
-  name     = "${var.project}-${var.environment}-tg-web"
+  name     = "${var.name_prefix}-tg-web"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${data.terraform_remote_state.super_state.vpc_id}"
+  vpc_id   = "${aws_vpc.main.id}"
 
   stickiness {
     type = "lb_cookie"
@@ -39,8 +38,11 @@ resource "aws_alb_target_group" "web" {
 
   tags {
     Group = "${var.project}"
-    Environment = "${var.environment}"
+# TODO Add back when environment support is added
+#    Environment = "${var.environment}"
   }
+
+  depends_on = [ "aws_alb.front" ]
 }
 
 /**

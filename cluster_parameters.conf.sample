@@ -1,0 +1,6 @@
+project = <project/cluster name>
+access_key = <AWS access key>
+secret_key = <AWS secret key>
+region = <AWS region which to deploy the cluster>
+root_zone = <The root DNS zone for the cluster>
+key_pair = <The name of the SSH key pair to inject into the cluster VMs>

@@ -1,43 +1,26 @@
-/**
- * Remote state for development environment
- *
- * ## Example
- *  `outputs.tf`
- *
- *  output "development_mysql_endpoint" {
- *    value = "${data.terraform_remote_state.development_state.development_mysql_endpoint}"
- *  }
- *
- *  $ terraform show
- */
-data "terraform_remote_state" "development_state" {
+# Super state config
+data "terraform_remote_state" "super_state" {
   backend = "s3"
   config {
     bucket = "${var.tf_state_bucket}"
     region = "${var.region}"
-    key = "${var.tf_state_key_development}"
+    key = "${var.project}/tfstate"
   }
-  depends_on = ["aws_s3_bucket.terraform"]
 }
 
-/**
- * Remote state for production environment
- *
- * ## Example
- *  `outputs.tf`
- *
- *  output "development_mysql_endpoint" {
- *    value = "${data.terraform_remote_state.production_state.production_mysql_endpoint}"
- *  }
- *
- *  $ terraform show
- */
-data "terraform_remote_state" "production_state" {
-  backend = "s3"
-  config {
-    bucket = "${var.tf_state_bucket}"
-    region = "${var.region}"
-    key = "${var.tf_state_key_production}"
+# Data resource for availability zone
+data "aws_availability_zones" "available" {}
+
+# Data resource for elb service account id
+data "aws_elb_service_account" "main" { }
+
+# AMI selector for ECS-Optimized AMI
+data "aws_ami" "ecs_optimized_ami" {
+  most_recent = true
+  filter {
+    name = "name"
+    values = ["*ecs-optimized*"]
   }
-  depends_on = ["aws_s3_bucket.terraform"]
+  name_regex = "^amzn-ami-.*-amazon-ecs-optimized$"
+  owners = ["amazon"]
 }
